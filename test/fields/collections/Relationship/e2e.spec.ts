@@ -24,8 +24,8 @@ import {
 } from '../../../__helpers/e2e/helpers.js'
 import { AdminUrlUtil } from '../../../__helpers/shared/adminUrlUtil.js'
 import { assertToastErrors } from '../../../__helpers/shared/assertToastErrors.js'
-import { initPayloadE2ENoConfig } from '../../../__helpers/shared/initPayloadE2ENoConfig.js'
 import { reInitializeDB } from '../../../__helpers/shared/clearAndSeed/reInitializeDB.js'
+import { initPayloadE2ENoConfig } from '../../../__helpers/shared/initPayloadE2ENoConfig.js'
 import { POLL_TOPASS_TIMEOUT, TEST_TIMEOUT_LONG } from '../../../playwright.config.js'
 import { relationshipFieldsSlug, textFieldsSlug } from '../../slugs.js'
 
@@ -1056,6 +1056,38 @@ describe('relationship', () => {
     await expect(
       page.locator('#field-relationshipDrawer .relationship--single-value__text'),
     ).toHaveText('new text')
+  })
+
+  test('should re-evaluate `filterOptions` on subsequent drawer opens when a value has already been set', async () => {
+    const doc1 = await createTextFieldDoc({ text: 'filterBySibling doc 1' })
+    const doc2 = await createTextFieldDoc({ text: 'filterBySibling doc 2' })
+    await loadCreatePage()
+
+    const listDrawerContent = page.locator('.list-drawer').locator('.drawer__content')
+    const rows = listDrawerContent.locator('table tbody tr')
+
+    // Select doc1 in sibling1 drawer
+    await page.locator('#field-relationshipDrawerFilterBySibling1').click()
+    await expect(listDrawerContent).toBeVisible()
+    await listDrawerContent.getByText(doc1.text, { exact: true }).click()
+    await expect(listDrawerContent).toBeHidden()
+
+    // First open of sibling2 drawer: doc1 should be filtered out by filterOptions
+    await page.locator('#field-relationshipDrawerFilterBySibling2').click()
+    await expect(listDrawerContent).toBeVisible()
+    await expect(rows).toHaveCount(1)
+    await expect(listDrawerContent.getByText(doc2.text)).toBeVisible()
+
+    // Select doc2 and close drawer
+    await listDrawerContent.getByText(doc2.text, { exact: true }).click()
+    await expect(listDrawerContent).toBeHidden()
+
+    // Second open: filterOptions must be re-evaluated
+    // doc1 is excluded by filterOptions (sibling1 = doc1)
+    // doc2 is excluded because it is already selected
+    await page.locator('#field-relationshipDrawerFilterBySibling2').click()
+    await expect(listDrawerContent).toBeVisible()
+    await expect(rows).toHaveCount(0)
   })
 
   describe('A11y', () => {

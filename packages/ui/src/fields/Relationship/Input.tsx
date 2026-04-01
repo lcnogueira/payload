@@ -8,7 +8,7 @@ import type {
 } from 'payload'
 
 import { dequal } from 'dequal/lite'
-import { formatAdminURL, wordBoundariesRegex } from 'payload/shared'
+import { formatAdminURL, hoistQueryParamsToAnd, wordBoundariesRegex } from 'payload/shared'
 import * as qs from 'qs-esm'
 import React, { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react'
 
@@ -128,18 +128,18 @@ export const RelationshipInput: React.FC<RelationshipInputProps> = (props) => {
       }, {})
 
       ;(Array.isArray(relationTo) ? relationTo : [relationTo]).forEach((relation) => {
+        if (!valuesByRelation[relation]) {
+          return
+        }
+
+        const existingFilter =
+          typeof filterOptions?.[relation] === 'object' ? filterOptions[relation] : {}
+
         newFilterOptions = {
           ...(newFilterOptions || {}),
-          [relation]: {
-            ...(typeof filterOptions?.[relation] === 'object' ? filterOptions[relation] : {}),
-            ...(valuesByRelation[relation]
-              ? {
-                  id: {
-                    not_in: valuesByRelation[relation],
-                  },
-                }
-              : {}),
-          },
+          [relation]: hoistQueryParamsToAnd(existingFilter, {
+            id: { not_in: valuesByRelation[relation] },
+          }),
         }
       })
     }
