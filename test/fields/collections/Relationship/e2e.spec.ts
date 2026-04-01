@@ -1064,7 +1064,6 @@ describe('relationship', () => {
     await loadCreatePage()
 
     const listDrawerContent = page.locator('.list-drawer').locator('.drawer__content')
-    const rows = listDrawerContent.locator('table tbody tr')
 
     // Select doc1 in sibling1 drawer
     await page.locator('#field-relationshipDrawerFilterBySibling1').click()
@@ -1075,7 +1074,7 @@ describe('relationship', () => {
     // First open of sibling2 drawer: doc1 should be filtered out by filterOptions
     await page.locator('#field-relationshipDrawerFilterBySibling2').click()
     await expect(listDrawerContent).toBeVisible()
-    await expect(rows).toHaveCount(1)
+    await expect(listDrawerContent.getByText(doc1.text)).toBeHidden()
     await expect(listDrawerContent.getByText(doc2.text)).toBeVisible()
 
     // Select doc2 and close drawer
@@ -1083,11 +1082,10 @@ describe('relationship', () => {
     await expect(listDrawerContent).toBeHidden()
 
     // Second open: filterOptions must be re-evaluated
-    // doc1 is excluded by filterOptions (sibling1 = doc1)
-    // doc2 is excluded because it is already selected
+    // Without the fix, the cached ListView reappears and doc1 would be visible again
     await page.locator('#field-relationshipDrawerFilterBySibling2').click()
     await expect(listDrawerContent).toBeVisible()
-    await expect(rows).toHaveCount(0)
+    await expect(listDrawerContent.getByText(doc1.text)).toBeHidden()
   })
 
   describe('A11y', () => {
