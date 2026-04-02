@@ -133,7 +133,9 @@ export const RelationshipInput: React.FC<RelationshipInputProps> = (props) => {
         }
 
         const existingFilter =
-          typeof filterOptions?.[relation] === 'object' ? filterOptions[relation] : {}
+          filterOptions?.[relation] && typeof filterOptions[relation] === 'object'
+            ? filterOptions[relation]
+            : {}
 
         newFilterOptions = {
           ...(newFilterOptions || {}),
