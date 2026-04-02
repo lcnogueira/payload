@@ -128,10 +128,6 @@ export const RelationshipInput: React.FC<RelationshipInputProps> = (props) => {
       }, {})
 
       ;(Array.isArray(relationTo) ? relationTo : [relationTo]).forEach((relation) => {
-        if (!valuesByRelation[relation]) {
-          return
-        }
-
         const existingFilter =
           filterOptions?.[relation] && typeof filterOptions[relation] === 'object'
             ? filterOptions[relation]
@@ -139,9 +135,9 @@ export const RelationshipInput: React.FC<RelationshipInputProps> = (props) => {
 
         newFilterOptions = {
           ...(newFilterOptions || {}),
-          [relation]: hoistQueryParamsToAnd(existingFilter, {
-            id: { not_in: valuesByRelation[relation] },
-          }),
+          [relation]: valuesByRelation[relation]
+            ? hoistQueryParamsToAnd(existingFilter, { id: { not_in: valuesByRelation[relation] } })
+            : existingFilter,
         }
       })
     }
