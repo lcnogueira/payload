@@ -711,7 +711,7 @@ describe('Relationships', () => {
             data: { name: 'Some Movie' },
           })
 
-          const directorWithMovies = await payload.create({
+          await payload.create({
             collection: 'directors',
             data: {
               name: 'Director With Movies',
@@ -748,7 +748,7 @@ describe('Relationships', () => {
                 depth: 0,
               },
             })
-            .then((res) => res.json())
+            .then((res) => res.json() as Promise<{ docs: Director[]; totalDocs: number }>)
 
           expect(restResult.totalDocs).toBe(1)
           expect(restResult.docs[0]?.id).toBe(directorWithoutMovies.id)
