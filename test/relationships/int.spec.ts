@@ -706,6 +706,9 @@ describe('Relationships', () => {
         })
 
         it('should query using "equals: null" on a hasMany relationship field', async () => {
+          await payload.delete({ collection: 'directors', where: {} })
+          await payload.delete({ collection: 'movies', where: {} })
+
           const movie = await payload.create({
             collection: 'movies',
             data: { name: 'Some Movie' },
